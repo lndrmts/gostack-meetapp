@@ -1,6 +1,6 @@
 import Sequelize, { Model } from 'sequelize';
 
-class Meetups extends Model {
+class Meetup extends Model {
     static init(sequelize) {
         super.init(
             {
@@ -17,8 +17,8 @@ class Meetups extends Model {
     }
 
     static associate(models) {
-        this.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+        this.belongsTo(models.User, { foreignKey: 'user_id', as: 'organizer' });
         this.belongsTo(models.File, { foreignKey: 'banner_id', as: 'banner' });
     }
 }
-export default Meetups;
+export default Meetup;
