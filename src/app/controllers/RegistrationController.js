@@ -1,11 +1,39 @@
 import { isBefore } from 'date-fns';
 import Registration from '../models/Registration';
 import Meetup from '../models/Meetup';
+import User from '../models/User';
+import Mail from '../../lib/mail';
 
 class ResgistrationController {
+    async index(req, res) {
+        const registrations = await Registration.findAll({
+            where: {
+                user_id: req.userId,
+                attributes: ['id'],
+                include: [
+                    {
+                        model: User,
+                        as: 'organizer',
+                        attributes: ['id', 'name', 'email'],
+                    },
+                    {
+                        model: Meetup,
+                    },
+                ],
+            },
+        });
+        return res.json(registrations);
+    }
+
     async store(req, res) {
-        const meetup = await Meetup.findOne({
-            where: { id: req.params.meetupId },
+        const meetup = await Meetup.findByPk(req.params.meetupId, {
+            include: [
+                {
+                    model: User,
+                    as: 'organizer',
+                    attributes: ['name', 'email'],
+                },
+            ],
         });
         /*
             Check Meetup Exists
@@ -75,6 +103,15 @@ class ResgistrationController {
         const registration = await Registration.create({
             user_id: req.userId,
             meetup_id: req.params.meetupId,
+        });
+
+        await Mail.sendmail({
+            to: ` ${meetup.organizer.name} <${meetup.organizer.email}>`,
+            subject: 'Nova Inscrição',
+            template: 'registration',
+            context: {
+                organizer: meetup.organizer.name,
+            },
         });
 
         return res.json(registration);
